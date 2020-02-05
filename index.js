@@ -4,7 +4,7 @@ const cors = require("cors");
 const util = require("util");
 const got = require("got");
 const app = express();
-const port = 8080;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -36,4 +36,4 @@ app.use("*", async (req, res) => {
 });
 
 
-app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+app.listen(PORT, () => console.log(`Example app listening on port ${PORT}!`));
