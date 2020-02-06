@@ -4,9 +4,10 @@ const cors = require("cors");
 const util = require("util");
 const got = require("got");
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 2000;
 
 app.use(cors());
+app.options('*', cors());
 app.use(bodyParser.json());
 
 app.use("*", async (req, res) => {
