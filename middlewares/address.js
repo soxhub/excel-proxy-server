@@ -7,7 +7,7 @@ function ipAddress() {
         addressSplit.pop();
         let finalAddress = addressSplit.join('.');
 
-        conf.get('IP_ADDRESS').includes(finalAddress) ? next() : res.end();
+        conf.get('ip_address').split(',').includes(finalAddress) ? next() : res.end();
     };
 }
 

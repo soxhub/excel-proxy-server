@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "export NODE_ENV=env && node index.js"
+    "start": "export NODE_ENV=custom-environment-variables.js && node index.js"
   },
   "engine": {
     "node": "11.0.0"
