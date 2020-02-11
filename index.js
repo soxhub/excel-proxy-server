@@ -14,7 +14,7 @@ app.use(cors());
 app.options('*', cors());
 app.use(bodyParser.json());
 
-app.use('/proxy/*', async (req, res) => {
+app.use('/proxy', async (req, res) => {
 
   let url = req.query.targetUrl;
   let token = req.query.token;
@@ -24,7 +24,7 @@ app.use('/proxy/*', async (req, res) => {
     headers: {
       token: token
     },
-    responseType: text  
+    responseType: "text"
   };
 
 
