@@ -7,6 +7,7 @@ function ipAddress() {
         addressSplit.pop();
         let finalAddress = addressSplit.join('.');
 
+        console.log(req.ip);
         conf.get('ip_address').split(',').includes(finalAddress) ? next() : res.status(401).send({ message: 'Unauthorized' });
     };
 }
