@@ -1,13 +1,13 @@
 import React from 'react';
 import './App.scss';
 
-import Login from "./components/login"
+import UploadForm from './components/uploadForm';
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
-      <Login/>
+      <UploadForm/>
       </header>
     </div>
   );

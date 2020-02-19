@@ -1,12 +1,22 @@
-import React, { Component } from "react";
+import React, { useState } from "react";
 import logo from "../assets/auditboard-logo.png";
-import '../../node_modules/bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import Upload from "./uploader";
 
-export default class Login extends Component {
+function UploadForm ( ){
+  let [state, setState] = useState({
+    instanceUrl: '',
+    instanceToken: ''
+  });
 
-
-  render() {
+  const handleChange = e => {
+    
+    setState({
+      ...state,
+      [e.target.name]: e.target.value
+    });
+  }
+  
     return (
       <div className="container login-container">
           <div style={{height: '30%'}} className="flex items-center"></div>
@@ -17,16 +27,19 @@ export default class Login extends Component {
           <div className="step1">
             <form className="panel-body form-theme-2 npb">
               <div className="form-group">
-                <input type="url" className="form-control input-sm"  placeholder="Instance URL" required />
+                <input type="url" name="instanceUrl" className="form-control input-sm" onChange={handleChange} placeholder="Instance URL" required />
               </div>
               <div className="form-group">
-                <input type="password" className="form-control input-sm" placeholder="Token" required />
+                <input type="password" name="instanceToken" className="form-control input-sm" onChange={handleChange} placeholder="Token" required />
               </div>
-              <Upload/>
+              <Upload currentState={state}/>
             </form>
           </div>
         </section>
       </div>
     );
   }
-}
+
+export default UploadForm;
+
+

@@ -7,18 +7,18 @@ const util = require("util");
 const got = require("got");
 const multer = require("multer");
 const app = express();
-const PORT = process.env.PORT || 2000;
+const PORT = process.env.PORT || 3000;
 
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
-    cb(null, "./public/uploads");
+    cb(null, "./uploads");
   },
   filename: function(req, file, cb) {
     cb(null, Date.now()+ '-' + file.originalname );
   }
 });
 
-const upload = multer({ storage: storage }).single('myImage');
+const upload = multer({ storage: storage }).single('myNarrative');
 
 app.use(logger());
 app.use(address());
@@ -26,13 +26,7 @@ app.use(cors());
 app.options("*", cors());
 app.use(bodyParser.json());
 
-app.post("/upload", function(req, res) {
-  upload(req, res, err => {
-    console.log("Request ---", req.body);
-    console.log("Request file ---", req.file);
-    if (err) console.log(err);
-  });
-});
+app.post("/upload", upload);
 
 app.use("/proxy", async (req, res) => {
   let url = req.query.targetUrl;
