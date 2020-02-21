@@ -21,7 +21,7 @@ function Upload() {
         formData.append('url', url)
         formData.append('token', token)
 
-        axios.post('/upload', formData)
+        axios.post('/upload', formData, alert.show('Narrative Being uploaded', {type: 'info'}))
             .then(() => {
                 alert.show('Narrative successfully uploaded', {
                     type: 'success',
