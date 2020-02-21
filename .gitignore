@@ -1,2 +1,25 @@
-node_modules
-.envrc
+#backend
+backend/node_modules
+backend/.envrc
+
+
+#frontend
+# testing
+frontend/coverage
+frontend/node_modules
+# production
+frontend/build
+
+# misc
+frontend/.DS_Store
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+.DS_Store
