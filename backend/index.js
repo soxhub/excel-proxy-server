@@ -7,18 +7,21 @@ const util = require("util");
 const got = require("got");
 const multer = require("multer");
 const app = express();
-const PORT = process.env.PORT || 3000;
+const path = require('path');
+const fs = require('fs');
+const PORT = process.env.PORT || 3001;
+const addNarratives = require('./core/narrative-upload');
 
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
-    cb(null, "./uploads");
+    cb(null, path.join(__dirname+'/uploads'));
   },
   filename: function(req, file, cb) {
-    cb(null, Date.now()+ '-' + file.originalname );
+		cb(null, file.originalname);
   }
 });
 
-const upload = multer({ storage: storage }).single('myNarrative');
+const upload = multer({ storage: storage }).any();
 
 app.use('/', express.static(path.join(__dirname, 'public')));
 
@@ -28,8 +31,14 @@ app.use(cors());
 app.options("*", cors());
 app.use(bodyParser.json());
 
-app.post("/api/upload", upload, async function(req, res) {
-  res.send(req.body);
+app.post("/upload", upload, async function(req, res) {
+	const { token, url:instanceUrl } = req.body;
+
+	addNarratives({
+		token,
+		instanceUrl,
+		zipPath: req.files[0].path,
+	})
 });
 
 app.use("/proxy", async (req, res) => {

@@ -15,12 +15,12 @@ function Upload() {
         if (!validated()) {
             return
         }
-        
+
         const formData = new FormData()
         formData.append('myNarrative', uploading)
         formData.append('url', url)
         formData.append('token', token)
-        
+
         const startAlert = alert.show('Narrative Being uploaded', {type: 'info', timeout: 3000000});
         axios.post('/api/upload', formData, startAlert)
             .then(() => {
