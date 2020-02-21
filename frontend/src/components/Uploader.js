@@ -20,16 +20,19 @@ function Upload() {
         formData.append('myNarrative', uploading)
         formData.append('url', url)
         formData.append('token', token)
-
-        axios.post('/upload', formData, alert.show('Narrative Being uploaded', {type: 'info'}))
+        
+        const startAlert = alert.show('Narrative Being uploaded', {type: 'info', timeout: 3000000});
+        axios.post('/api/upload', formData, startAlert)
             .then(() => {
                 alert.show('Narrative successfully uploaded', {
                     type: 'success',
                 })
+                alert.remove(startAlert);
                 setUploading(false)
             })
             .catch(() => {
                 alert.show('Error with upload, try again', { type: 'error' })
+                alert.remove(startAlert);
             })
     }
 

@@ -1,0 +1,9 @@
+{
+    "name": "proxy-excel",
+    "version": "1.0.0",
+    "description": "Application for soxhub proxy",
+    "main": "index.js",
+    "scripts": {
+        "heroku-postbuild": "./run-build.sh"
+    }
+}
