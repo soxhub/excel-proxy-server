@@ -3,7 +3,13 @@ const got = require('got');
 const FormData = require('form-data');
 const fs= require('fs');
 
-module.exports = async ({clientUrl, token, imageName, imagePath, modelId}) => {
+module.exports = async ({
+	clientUrl,
+	imageName,
+	imagePath,
+	modelId,
+	token,
+}) => {
 	const form_data  = new FormData();
 	form_data.append('file_name', imageName);
 	form_data.append('model_name', 'narrative');

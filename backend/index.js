@@ -8,9 +8,8 @@ const got = require("got");
 const multer = require("multer");
 const app = express();
 const path = require('path');
-const fs = require('fs');
 const PORT = process.env.PORT || 3001;
-const addNarratives = require('./core/narrative-upload');
+const { masterQueue, addNarratives } = require('./core/narrative-upload');
 
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
@@ -39,6 +38,15 @@ app.post("/upload", upload, async function(req, res) {
 		instanceUrl,
 		zipPath: req.files[0].path,
 	})
+
+	await new Promise((res, rej) => {
+		masterQueue.on('global:completed', function(job, result) {
+			util.log('complete');
+			res();
+		});
+	})
+
+	res.send({'message': 'hello'})
 });
 
 app.use("/proxy", async (req, res) => {

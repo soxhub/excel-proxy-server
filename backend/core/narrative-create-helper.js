@@ -5,9 +5,12 @@ const path = require('path');
 const fs = require('fs');
 const util = require('util');
 
-const parse =  async ({ token, instanceUrl, folderPath }) => {
+const parseFolder =  async ({
+	folderPath,
+	instanceUrl,
+	token,
+}) => {
 	const files = fs.readdirSync(folderPath);
-	util.log('parse files: ', files);
 
 	for (let i = 0; i < files.length; i++) {
 		let ext = path.extname(files[i]);
@@ -22,10 +25,7 @@ const parse =  async ({ token, instanceUrl, folderPath }) => {
 			let images = fs.readdirSync(imagePath);
 			for (let j = 0; j < images.length; j++) {
 				let mimetype = path.extname(images[j]);
-				util.log('mimetype: ', mimetype);
-				util.log(mimetype !== '.png');
 				if (mimetype === '.png' || mimetype === '.jpg') {
-					util.log('cool');
 					imagesArray.push({
 						filename: images[j],
 						path: path.join(imagePath, images[j]),
@@ -36,17 +36,18 @@ const parse =  async ({ token, instanceUrl, folderPath }) => {
 			}
 		}
 
-		await create({
+		await createNarrative({
 			instanceUrl,
 			token,
 			htmlFilePath: path.join(folderPath, files[i]),
 			imageFolder: imagesArray
 		});
 	}
+
+	return Promise.resolve();
 }
 
-const create = async ({ instanceUrl, token, htmlFilePath, imageFolder = [] }) => {
-	util.log('create start');
+const createNarrative = async ({ instanceUrl, token, htmlFilePath, imageFolder = [] }) => {
 	const user_id = token.split(':')[0];
 	const narrativeName = Math.floor(Math.random() * 100000) + path.basename(htmlFilePath, '.html');
 	const newNarrative = await got.post(`${instanceUrl}/api/v1/narratives`, {
@@ -63,14 +64,10 @@ const create = async ({ instanceUrl, token, htmlFilePath, imageFolder = [] }) =>
 	})
 
 	const newNarrativeId = JSON.parse(newNarrative.body).narratives[0].id;
-	util.log('create narrative: ', newNarrativeId);
-
 	let htmlString = fs.readFileSync(htmlFilePath, "utf8");
-	util.log('htmlString: ', htmlString);
 
-	util.log('create imageFolder length: ', imageFolder.length);
 	for (let i = 0; i < imageFolder.length; i++) {
-		let image = imageFolder[i];
+		const image = imageFolder[i];
 
 		const s3_response = await uploadImageHelper({
 			clientUrl: `${instanceUrl}/api/v1/files/s3_upload_signature`,
@@ -83,7 +80,7 @@ const create = async ({ instanceUrl, token, htmlFilePath, imageFolder = [] }) =>
 		const parser = new xml2js.Parser();
 		const s3_response_json = await parser.parseStringPromise(s3_response);
 
-		let file = await got.post(`${instanceUrl}/api/v1/files`, {
+		const file = await got.post(`${instanceUrl}/api/v1/files`, {
 			headers: {
 				token,
 				"content-type": "application/json",
@@ -105,10 +102,6 @@ const create = async ({ instanceUrl, token, htmlFilePath, imageFolder = [] }) =>
 			}),
 		});
 
-		util.log('create file id: ', JSON.parse(file.body).files[0].id);
-
-		util.log(`${image.baseFolder}/${image.filename}`);
-
 		htmlString = htmlString.toString().replace(new RegExp(`"${image.baseFolder}/${image.filename}"`, "g"), ` data-original-src="${s3_response_json.PostResponse.Location[0]}" data-file-id="${JSON.parse(file.body).files[0].id}" data-type="s3"`);
 	}
 
@@ -119,12 +112,9 @@ const create = async ({ instanceUrl, token, htmlFilePath, imageFolder = [] }) =>
 		searchParams: new URLSearchParams([['include', 'full_narrative']]),
 	});
 
-
 	const narrativeDocument = JSON.parse(getNarrative.body).documents[0];
 
-	util.log(htmlString)
-
-	const newDocument = await got.put(`${instanceUrl}/api/v1/documents/${narrativeDocument.id}`, {
+	await got.put(`${instanceUrl}/api/v1/documents/${narrativeDocument.id}`, {
 		headers: {
 			token,
 			'content-type': 'application/json',
@@ -136,9 +126,10 @@ const create = async ({ instanceUrl, token, htmlFilePath, imageFolder = [] }) =>
 		})
 	});
 
+	return Promise.resolve();
 }
 
 module.exports = {
-	parse,
-	create,
+	parseFolder,
+	createNarrative,
 }
