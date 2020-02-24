@@ -1,12 +1,11 @@
-const Queue = require('bull');
 const parseZip = require('./core/parse-zip-helper');
 const { parseFolder } = require('./core/narrative-create-helper');
-const util = require('util');
-const REDIS_URL = process.env.REDIS_URL || "redis://127.0.0.1:6379";
-const MAX_JOBS_PER_WORKER = 2;
-const workQueue = new Queue('narrative_upload', REDIS_URL);
+const { queue } = require('./core/narrative-upload');
 
-workQueue.process(MAX_JOBS_PER_WORKER, async (job, done) => {
+const util = require('util');
+const MAX_JOBS_PER_WORKER = 2;
+
+queue.process(MAX_JOBS_PER_WORKER, async (job, done) => {
 	const { instanceUrl, token, zipPath } = job.data;
 
 	try {

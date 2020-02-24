@@ -10,6 +10,7 @@ const app = express();
 const path = require('path');
 const PORT = process.env.PORT || 3001;
 const { masterQueue, addNarratives } = require('./core/narrative-upload');
+const { UI } = require('bull-board')
 
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
@@ -29,6 +30,7 @@ app.use(address());
 app.use(cors());
 app.options("*", cors());
 app.use(bodyParser.json());
+app.use('/api/queues', UI);
 
 app.post("/upload", upload, async function(req, res) {
 	const { token, url:instanceUrl } = req.body;
@@ -74,4 +76,4 @@ app.use("/proxy", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`Proxy listening on port ${PORT}!`));
+app.listen(PORT, () => console.log(`App listening on port ${PORT}!`));
