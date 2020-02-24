@@ -4,6 +4,6 @@
     "description": "Application for soxhub proxy",
     "main": "index.js",
     "scripts": {
-        "heroku-postbuild": "./run-build.sh"
+        "heroku-postbuild": "chmod +x run-build.sh && ./run-build.sh"
     }
 }
