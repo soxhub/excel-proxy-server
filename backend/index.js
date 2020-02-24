@@ -20,14 +20,15 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage }).single('myNarrative');
 
+app.use('/', express.static(path.join(__dirname, 'public')));
+
 app.use(logger());
 app.use(address());
 app.use(cors());
 app.options("*", cors());
 app.use(bodyParser.json());
 
-app.post("/upload", upload, async(req, res) => {
-
+app.post("/api/upload", upload, async function(req, res) {
   res.send(req.body);
 });
 
