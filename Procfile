@@ -1,2 +1,2 @@
-web: node backend/index.js
-worker: node backend/worker.js
+web: cd backend && node index.js
+worker: cd backend && node worker.js
