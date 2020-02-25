@@ -7,18 +7,23 @@ const util = require("util");
 const got = require("got");
 const multer = require("multer");
 const app = express();
-const PORT = process.env.PORT || 3000;
+const path = require('path');
+const rimraf = require('rimraf');
+const PORT = process.env.PORT || 3001;
+const { queue, addNarratives } = require('./core/narrative-upload');
+const { UI } = require('bull-board');
+const shortid = require('shortid');
 
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
-    cb(null, "./uploads");
+    cb(null, path.join(__dirname+'/uploads'));
   },
   filename: function(req, file, cb) {
-    cb(null, Date.now()+ '-' + file.originalname );
+		cb(null, shortid.generate() + file.originalname);
   }
 });
 
-const upload = multer({ storage: storage }).single('myNarrative');
+const upload = multer({ storage: storage }).any();
 
 app.use('/', express.static(path.join(__dirname, 'public')));
 
@@ -27,9 +32,22 @@ app.use(address());
 app.use(cors());
 app.options("*", cors());
 app.use(bodyParser.json());
+app.use('/api/queues', UI);
 
 app.post("/api/upload", upload, async function(req, res) {
-  res.send(req.body);
+	const { token, url:instanceUrl } = req.body;
+
+	try {
+		addNarratives({
+			token,
+			instanceUrl,
+			zipPath: req.files[0].path,
+		});
+
+		res.send({ 'message': 'file upload has been initiated' })
+	} catch(err) {
+		console.log('error: ', err);
+	}
 });
 
 app.use("/proxy", async (req, res) => {
@@ -57,4 +75,4 @@ app.use("/proxy", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`Proxy listening on port ${PORT}!`));
+app.listen(PORT, () => console.log(`App listening on port ${PORT}!`));

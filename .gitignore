@@ -1,6 +1,8 @@
 #backend
 backend/node_modules
 backend/.envrc
+backend/uploads/
+backend/zip_output/
 
 
 #frontend

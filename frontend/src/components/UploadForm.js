@@ -1,6 +1,6 @@
-import React from 'react'
-import 'bootstrap/dist/css/bootstrap.min.css'
-import Upload from './Uploader'
+import React from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import Upload from './Uploader';
 
 function UploadForm() {
     return (
@@ -16,4 +16,4 @@ function UploadForm() {
     )
 }
 
-export default UploadForm
+export default UploadForm;

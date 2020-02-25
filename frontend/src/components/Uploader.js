@@ -1,114 +1,126 @@
-import React, { useState } from 'react'
-import { useAlert } from 'react-alert'
-import axios from 'axios'
-import 'bootstrap/dist/css/bootstrap.min.css'
+import React, { useState } from 'react';
+import { useAlert } from 'react-alert';
+import axios from 'axios';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function Upload() {
-    const alert = useAlert()
+  const alert = useAlert();
 
-    let [token, setToken] = useState(null)
-    let [url, setUrl] = useState(null)
-    let [uploading, setUploading] = useState(null)
+  let [token, setToken] = useState(null);
+  let [url, setUrl] = useState(null);
+  let [uploading, setUploading] = useState(null);
 
-    const onFormSubmit = e => {
-        e.preventDefault()
-        if (!validated()) {
-            return
-        }
-        
-        const formData = new FormData()
-        formData.append('myNarrative', uploading)
-        formData.append('url', url)
-        formData.append('token', token)
-        
-        const startAlert = alert.show('Narrative Being uploaded', {type: 'info', timeout: 3000000});
-        axios.post('/api/upload', formData, startAlert)
-            .then(() => {
-                alert.show('Narrative successfully uploaded', {
-                    type: 'success',
-                })
-                alert.remove(startAlert);
-                setUploading(false)
-            })
-            .catch(() => {
-                alert.show('Error with upload, try again', { type: 'error' })
-                alert.remove(startAlert);
-            })
+  const onFormSubmit = e => {
+    e.preventDefault()
+    if (!validated()) {
+      return;
     }
 
-    const validated = () => {
-        let errorMsg = ''
-        if (token === '' || url === '') {
-            errorMsg = 'Please enter valid credentials' // this case might not be needed anymore
-        } else if (uploading && uploading.type !== 'application/zip') {
-            errorMsg = 'Please upload a zip file'
-        } else if (!uploading) {
-            errorMsg = 'No file detected, please try again' //this case might not be needed anymore
-        }
-        if (errorMsg) {
-            alert.show(errorMsg, { type: 'error' })
-            return false
+    const formData = new FormData()
+    formData.append('myNarrative', uploading);
+    formData.append('url', url);
+    formData.append('token', token);
+
+    const startAlert = alert.show('Narrative Being uploaded', {type: 'info', timeout: 3000000});
+    axios.post('/api/upload', formData, startAlert)
+      .then(() => {
+        alert.show('Narrative successfully uploaded', {
+          type: 'success',
+        });
+        alert.remove(startAlert);
+        setUploading(false);
+
+        // Redirect to Bull UI
+        if (process.env.NODE_ENV === 'development') {
+          window.location.href = 'http://localhost:3001/api/queues';
         } else {
-            return true
+          window.location.href = '/api/queues';
         }
+      })
+      .catch(() => {
+        alert.show('Error with upload, try again', { type: 'error' })
+        alert.remove(startAlert);
+      })
+  }
+
+  const validated = () => {
+    let errorMsg = ''
+
+    if (token === '' || url === '') {
+      // this case might not be needed anymore
+      errorMsg = 'Please enter valid credentials and client app url.';
+    } else if (url && !url.endsWith('.com')) {
+      errorMsg = 'Please enter valid client app url.';
+    } else if (uploading && uploading.type !== 'application/zip') {
+      errorMsg = 'Please upload a zip file.';
+    } else if (!uploading) {
+      //this case might not be needed anymore
+      errorMsg = 'No file detected, please try again.';
     }
-
-    const onChange = event => {
-        setUploading(event.target.files[0])
+    if (errorMsg) {
+      alert.show(errorMsg, { type: 'error' });
+      return false;
+    } else {
+      return true;
     }
+  }
 
-    let disableSubmit = !url || !token || !uploading
+  const onChange = event => {
+    setUploading(event.target.files[0])
+  }
 
-    return (
-        <form className="panel-body form-theme-2 npb">
-            <div className="form-group">
-                <input
-                    type="url"
-                    name="instanceUrl"
-                    className="form-control input-sm"
-                    onChange={e => setUrl(e.target.value)}
-                    placeholder="Instance URL"
-                    required
-                />
-            </div>
-            <div className="form-group">
-                <input
-                    type="password"
-                    name="instanceToken"
-                    className="form-control input-sm"
-                    onChange={e => setToken(e.target.value)}
-                    placeholder="Token"
-                    required
-                />
-            </div>
-            <div className="form-group">
-                <div className="row">
-                    <div className="col-sm">
-                        <input
-                            style={{ width: 300, marginTop: 20 }}
-                            type="file"
-                            onChange={onChange}
-                            encType="multipart/form-data"
-                            className="btn btn-primary btn-md btn-big-txt "
-                            name="myNarrative"
-                            accept=".zip"
-                        ></input>
-                    </div>
-                    <div className="col-sm">
-                        <button
-                            style={{ float: 'right', marginTop: 20}}
-                            type="submit"
-                            onClick={onFormSubmit}
-                            disabled={disableSubmit}
-                            className="btn btn-primary btn-center btn-lg btn-big-txt"
-                        >
-                            Upload
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </form>
-    )
+  let disableSubmit = !url || !token || !uploading;
+
+  return (
+    <form className="panel-body form-theme-2 npb">
+      <div className="form-group">
+        <input
+          type="url"
+          name="instanceUrl"
+          className="form-control input-sm"
+          onChange={e => setUrl(e.target.value)}
+          placeholder="Instance URL"
+          required
+        />
+      </div>
+      <div className="form-group">
+        <input
+          type="password"
+          name="instanceToken"
+          className="form-control input-sm"
+          onChange={e => setToken(e.target.value)}
+          placeholder="Token"
+          required
+        />
+      </div>
+      <div className="form-group">
+        <div className="row">
+          <div className="col-sm">
+            <input
+              style={{ width: 300, marginTop: 20 }}
+              type="file"
+              onChange={onChange}
+              encType="multipart/form-data"
+              className="btn btn-primary btn-md btn-big-txt "
+              name="myNarrative"
+              accept=".zip"
+            ></input>
+          </div>
+          <div className="col-sm">
+            <button
+              style={{ float: 'right', marginTop: 20}}
+              type="submit"
+              onClick={onFormSubmit}
+              disabled={disableSubmit}
+              className="btn btn-primary btn-center btn-lg btn-big-txt"
+            >
+              Upload
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  )
 }
 
 export default Upload
