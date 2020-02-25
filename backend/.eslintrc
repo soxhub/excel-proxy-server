@@ -1,0 +1,53 @@
+{
+    "rules": {
+        "indent": "off",
+        "indent-legacy": [
+            2,
+            "tab",
+            { "SwitchCase": 1 }
+        ],
+        "linebreak-style": [
+            2,
+            "unix"
+        ],
+        "semi": [
+            2,
+            "always"
+        ],
+        "no-unused-vars": [
+            2,
+            {"args": "after-used",
+            "argsIgnorePattern": "^_"}
+        ],
+        "one-var": [
+            2,
+            "never"
+        ],
+        "no-multiple-empty-lines": "off",
+        "padded-blocks": "off",
+        "no-trailing-spaces": [
+            1,
+            { "skipBlankLines": true }
+        ],
+        "no-spaced-func": [
+            2
+        ],
+        "strict": ["error"]
+
+    },
+    "parserOptions": {
+        "ecmaVersion": 8,
+        "ecmaFeatures": {
+            "experimentalObjectRestSpread": true
+        }
+    },
+    "env": {
+        "mocha":true,
+        "es6": true,
+        "node": true
+    },
+    "globals": {
+        "fakeTaskKue": true
+    },
+    "extends": "eslint:recommended"
+}
