@@ -10,7 +10,7 @@ queue.process(MAX_JOBS_PER_WORKER, async (job, done) => {
 
 	try {
 		const { directory } = await parseZip(zipPath);
-		await parseFolder({ token, instanceUrl, folderPath: directory });
+		await parseFolder({ token, instanceUrl, folderPath: directory, job });
 	} catch (error) {
 		util.log(error);
 	} finally {
@@ -18,4 +18,4 @@ queue.process(MAX_JOBS_PER_WORKER, async (job, done) => {
 	}
 });
 
-module.exports = workQueue;
+module.exports = queue;

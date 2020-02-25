@@ -8,9 +8,10 @@ const got = require("got");
 const multer = require("multer");
 const app = express();
 const path = require('path');
+const rimraf = require('rimraf');
 const PORT = process.env.PORT || 3001;
-const { masterQueue, addNarratives } = require('./core/narrative-upload');
-const { UI } = require('bull-board')
+const { queue, addNarratives } = require('./core/narrative-upload');
+const { UI } = require('bull-board');
 
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
@@ -32,23 +33,20 @@ app.options("*", cors());
 app.use(bodyParser.json());
 app.use('/api/queues', UI);
 
-app.post("/upload", upload, async function(req, res) {
+app.post("/api/upload", upload, async function(req, res) {
 	const { token, url:instanceUrl } = req.body;
 
-	addNarratives({
-		token,
-		instanceUrl,
-		zipPath: req.files[0].path,
-	})
-
-	await new Promise((res, rej) => {
-		masterQueue.on('global:completed', function(job, result) {
-			util.log('complete');
-			res();
+	try {
+		addNarratives({
+			token,
+			instanceUrl,
+			zipPath: req.files[0].path,
 		});
-	})
 
-	res.send({'message': 'hello'})
+		res.send({ 'message': 'file upload has been initiated' })
+	} catch(err) {
+		console.log('error: ', err);
+	}
 });
 
 app.use("/proxy", async (req, res) => {
@@ -74,6 +72,14 @@ app.use("/proxy", async (req, res) => {
     util.log(error.stack);
     return res.send(error.stack);
   }
+});
+
+queue.on('global:completed', function(job, result) {
+	// Clean out zip_output directory after zipped content has been uploaded
+	rimraf(path.join(__dirname, './zip_output/*'), (err) => {
+		if (err) console.log('err: ', err);
+	})
+	util.log('complete');
 });
 
 app.listen(PORT, () => console.log(`App listening on port ${PORT}!`));

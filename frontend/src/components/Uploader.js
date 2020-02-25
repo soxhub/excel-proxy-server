@@ -4,7 +4,7 @@ import axios from 'axios'
 import 'bootstrap/dist/css/bootstrap.min.css'
 
 function Upload() {
-    const alert = useAlert()
+		const alert = useAlert()
 
     let [token, setToken] = useState(null)
     let [url, setUrl] = useState(null)
@@ -28,7 +28,14 @@ function Upload() {
                     type: 'success',
                 })
                 alert.remove(startAlert);
-                setUploading(false)
+								setUploading(false)
+
+								// Redirect to Bull UI
+								if (process.env.NODE_ENV === 'development') {
+									window.location.href = 'http://localhost:3001/api/queues';
+								} else {
+									window.location.href = '/api/queues';
+								}
             })
             .catch(() => {
                 alert.show('Error with upload, try again', { type: 'error' })

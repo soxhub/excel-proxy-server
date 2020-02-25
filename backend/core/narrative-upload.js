@@ -9,11 +9,15 @@ const addNarratives = ({
 	token,
 	zipPath
 }) => {
-	queue.add({
-		instanceUrl, token, zipPath
-	})
-};
+	// Remove trailing slashes and trim whitespace
+	const cleanedUpInstanceUrl = instanceUrl.trim().replace(/\/+$/, "");
 
+	queue.add({
+		instanceUrl: cleanedUpInstanceUrl,
+		token,
+		zipPath
+	});
+};
 
 module.exports = {
 	addNarratives,

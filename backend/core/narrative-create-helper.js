@@ -3,32 +3,40 @@ const xml2js = require('xml2js');
 const uploadImageHelper  = require("./upload-image-helper");
 const path = require('path');
 const fs = require('fs');
+const cuid = require('cuid');
 const util = require('util');
 
-const parseFolder =  async ({
+/**
+ * Parse Folder
+ */
+const parseFolder = async ({
 	folderPath,
 	instanceUrl,
 	token,
+	job,
 }) => {
+	// Get files inside unzipped folder
 	const files = fs.readdirSync(folderPath);
+	// Filter for html files. We need this array length track progress
+	const htmlFiles = files.filter(file => path.extname(file) === '.html');
 
-	for (let i = 0; i < files.length; i++) {
-		let ext = path.extname(files[i]);
-		if (ext !== '.html') {
-			continue;
-		}
+	// Create a narrative for each HTML file
+	for (let i = 0; i < htmlFiles.length; i++) {
+		let fileBasename = path.basename(htmlFiles[i], '.html');
 
-		let fileBasename = path.basename(files[i], '.html');
 		let imagesArray = [];
-		let imagePath = path.join(folderPath, fileBasename + '.fld');
-		if (fs.statSync(imagePath).isDirectory()) {
-			let images = fs.readdirSync(imagePath);
-			for (let j = 0; j < images.length; j++) {
-				let mimetype = path.extname(images[j]);
+
+		// The images are in a folder that lives at the same level as the HTML file. The folder contains `.fld` extension but this might just be a Mac Word detail
+		let imagesFolderPath = path.join(folderPath, fileBasename + '.fld');
+		if (fs.statSync(imagesFolderPath).isDirectory()) {
+			let imagesFolderFiles = fs.readdirSync(imagesFolderPath);
+			// Loop and find all files with a png and jpg extension. Ignore any other kind of files
+			for (let j = 0; j < imagesFolderFiles.length; j++) {
+				let mimetype = path.extname(imagesFolderFiles[j]);
 				if (mimetype === '.png' || mimetype === '.jpg') {
 					imagesArray.push({
-						filename: images[j],
-						path: path.join(imagePath, images[j]),
+						filename: imagesFolderFiles[j],
+						path: path.join(imagesFolderPath, imagesFolderFiles[j]),
 						mimetype: mimetype === '.png' ? 'image/png' : 'image/jpeg',
 						baseFolder: fileBasename + '.fld',
 					});
@@ -37,38 +45,64 @@ const parseFolder =  async ({
 		}
 
 		await createNarrative({
+			htmlFilePath: path.join(folderPath, htmlFiles[i]),
+			imagesFolder: imagesArray,
 			instanceUrl,
 			token,
-			htmlFilePath: path.join(folderPath, files[i]),
-			imageFolder: imagesArray
 		});
+
+		// Report on progress of uploads
+		job.progress( Math.floor( ( (i + 1) / htmlFiles.length ) * 100) );
 	}
 
 	return Promise.resolve();
-}
+} // parseFolder
 
-const createNarrative = async ({ instanceUrl, token, htmlFilePath, imageFolder = [] }) => {
+/**
+ * Create Narrative
+ */
+const createNarrative = async ({
+	htmlFilePath,
+	imagesFolder = [],
+	instanceUrl,
+	token,
+}) => {
+	// Get the user id from the access token
 	const user_id = token.split(':')[0];
-	const narrativeName = Math.floor(Math.random() * 100000) + path.basename(htmlFilePath, '.html');
-	const newNarrative = await got.post(`${instanceUrl}/api/v1/narratives`, {
+
+	// Default client app post request option
+	const _client = got.extend({
 		headers: {
 			token,
 			'content-type': 'application/json',
 		},
-		body: JSON.stringify({
-			"narrative": {
-				"name": narrativeName,
-				"uid": narrativeName,
-			}
-		}),
 	})
 
+	// Get the original HTML content as a string
+	let htmlFileString = fs.readFileSync(htmlFilePath, 'utf8');
+
+	// Generate Narrative uids and title
+	const narrativeUID = cuid();
+	const narrativeTitle = `${path.basename(htmlFilePath, '.html')}-${narrativeUID}`;
+
+	// Create a new narrative with the above generated uids and title
+	const newNarrative = await _client.post(`${instanceUrl}/api/v1/narratives`, {
+		body: JSON.stringify({
+			"narrative": {
+				"name": narrativeTitle,
+				"uid": narrativeUID,
+			}
+		}),
+	});
+
+	// Get new narrative id
 	const newNarrativeId = JSON.parse(newNarrative.body).narratives[0].id;
-	let htmlString = fs.readFileSync(htmlFilePath, "utf8");
 
-	for (let i = 0; i < imageFolder.length; i++) {
-		const image = imageFolder[i];
+	// Loop images folder and add images to the narrative document HTML
+	for (let i = 0; i < imagesFolder.length; i++) {
+		const image = imagesFolder[i];
 
+		// Upload images to S3
 		const s3_response = await uploadImageHelper({
 			clientUrl: `${instanceUrl}/api/v1/files/s3_upload_signature`,
 			token,
@@ -77,14 +111,12 @@ const createNarrative = async ({ instanceUrl, token, htmlFilePath, imageFolder =
 			modelId: newNarrativeId,
 		});
 
+		// Convert S3 XML response to JSON
 		const parser = new xml2js.Parser();
 		const s3_response_json = await parser.parseStringPromise(s3_response);
 
-		const file = await got.post(`${instanceUrl}/api/v1/files`, {
-			headers: {
-				token,
-				"content-type": "application/json",
-			},
+		// Create a File for each S3 iamge
+		const file = await _client.post(`${instanceUrl}/api/v1/files`, {
 			body: JSON.stringify({
 				"file": {
 					"fileable_id": newNarrativeId,
@@ -102,32 +134,33 @@ const createNarrative = async ({ instanceUrl, token, htmlFilePath, imageFolder =
 			}),
 		});
 
-		htmlString = htmlString.toString().replace(new RegExp(`"${image.baseFolder}/${image.filename}"`, "g"), ` data-original-src="${s3_response_json.PostResponse.Location[0]}" data-file-id="${JSON.parse(file.body).files[0].id}" data-type="s3"`);
+		// Add a data-original-src attribute to the corresponding img tags in the HTML file with path set to the above S3 image file
+		htmlFileString = htmlFileString.toString().replace(
+			new RegExp(`"${image.baseFolder}/${image.filename}"`, "g"),
+			` data-original-src="${s3_response_json.PostResponse.Location[0]}" data-file-id="${JSON.parse(file.body).files[0].id}" data-type="s3"`
+		);
 	}
 
+	// Get the full narrative
 	const getNarrative = await got.get(`${instanceUrl}/api/v1/narratives/${newNarrativeId}`, {
-		headers: {
-			token,
-		},
+		headers: { token },
 		searchParams: new URLSearchParams([['include', 'full_narrative']]),
 	});
 
+	// Get the narrative document
 	const narrativeDocument = JSON.parse(getNarrative.body).documents[0];
 
-	await got.put(`${instanceUrl}/api/v1/documents/${narrativeDocument.id}`, {
-		headers: {
-			token,
-			'content-type': 'application/json',
-		},
+	// Update the narrative document with the new HTML
+	await _client.put(`${instanceUrl}/api/v1/documents/${narrativeDocument.id}`, {
 		body: JSON.stringify({
 			"document": {
-				"body": htmlString,
+				"body": htmlFileString,
 			}
 		})
 	});
 
 	return Promise.resolve();
-}
+} // createNarrative
 
 module.exports = {
 	parseFolder,
