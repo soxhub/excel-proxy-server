@@ -12,13 +12,14 @@ const rimraf = require('rimraf');
 const PORT = process.env.PORT || 3001;
 const { queue, addNarratives } = require('./core/narrative-upload');
 const { UI } = require('bull-board');
+const shortid = require('shortid');
 
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
     cb(null, path.join(__dirname+'/uploads'));
   },
   filename: function(req, file, cb) {
-		cb(null, file.originalname);
+		cb(null, shortid.generate() + file.originalname);
   }
 });
 
@@ -72,14 +73,6 @@ app.use("/proxy", async (req, res) => {
     util.log(error.stack);
     return res.send(error.stack);
   }
-});
-
-queue.on('global:completed', function(job, result) {
-	// Clean out zip_output directory after zipped content has been uploaded
-	rimraf(path.join(__dirname, './zip_output/*'), (err) => {
-		if (err) console.log('err: ', err);
-	})
-	util.log('complete');
 });
 
 app.listen(PORT, () => console.log(`App listening on port ${PORT}!`));
