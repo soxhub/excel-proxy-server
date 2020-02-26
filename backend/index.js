@@ -25,10 +25,10 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage }).any();
 
+app.use(address());
 app.use('/', express.static(path.join(__dirname, 'public')));
 
 app.use(logger());
-app.use(address());
 app.use(cors());
 app.options("*", cors());
 app.use(bodyParser.json());
