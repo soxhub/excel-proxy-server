@@ -6,12 +6,16 @@ function ipAddress() {
 
 		// Get the last three octects of ip address
 		let ip = requestIp.getClientIp(req);
+
 		let addressSplit = ip.split(".");
 		addressSplit.pop();
 		let finalAddress = addressSplit.join(".");
 
+		const allowAddress = conf.get("ip_address").split(',').map(item => item.trim());
+
+
 		// Check to see if incoming ip is in config vars
-		conf.get("ip_address").includes(finalAddress)? next(): res.status(401).send({ message: "Unauthorized" });
+		allowAddress.includes(finalAddress) ? next() : res.status(401).send({ message: "Unauthorized" });
 	};
 }
 
