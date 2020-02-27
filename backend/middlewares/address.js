@@ -12,6 +12,10 @@ function ipAddress() {
 		let finalAddress = addressSplit.join(".");
 
 		const allowAddress = conf.get("ip_address").split(',').map(item => item.trim());
+		console.log("allow addy",allowAddress);
+		console.log('actual ip', ip)
+		console.log('conf ip_addy',conf.get("ip_address") )
+		
 
 
 		// Check to see if incoming ip is in config vars
