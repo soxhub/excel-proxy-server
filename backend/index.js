@@ -68,10 +68,11 @@ app.use("/proxy", async (req, res) => {
 
   try {
     let payload = await got(url, option);
-    return res.send(payload.body);
+    let statusOnPayload = payload.statusCode;
+    return res.status(statusOnPayload).send(payload.body);
   } catch (error) {
     util.log(error.stack);
-    return res.send(error.stack);
+		return res.status(404).send(error.stack);
   }
 });
 
