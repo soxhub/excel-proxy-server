@@ -17,20 +17,31 @@ const parseFolder = async ({
 }) => {
 	// Get files inside unzipped folder
 	const files = fs.readdirSync(folderPath);
-	// Filter for html files. We need this array length track progress
-	const htmlFiles = files.filter(file => path.extname(file) === '.html');
+	// Filter for html files. We need this array length to track progress
+	const htmlFiles = files.filter(file => path.extname(file) === '.htm' || path.extname(file) === '.html');
 	util.log("Files are: ", htmlFiles);
 
 	// Create a narrative for each HTML file
 	for (let i = 0; i < htmlFiles.length; i++) {
-		let fileBasename = path.basename(htmlFiles[i], '.html');
-
+		let fileBasename = path.basename(htmlFiles[i], path.extname(htmlFiles[i]));
 		let imagesArray = [];
+		let imagesFolder = {};
 
-		// The images are in a folder that lives at the same level as the HTML file. The folder contains `.fld` extension but this might just be a Mac Word detail
-		let imagesFolderPath = path.join(folderPath, fileBasename + '.fld');
-		if (fs.statSync(imagesFolderPath).isDirectory()) {
-			let imagesFolderFiles = fs.readdirSync(imagesFolderPath);
+		// The images are in a folder that lives at the same level as the HTML file. The folder contains  a `_files` affix or the `.fld` extension
+		if (fs.existsSync(path.join(folderPath, fileBasename + '_files'))) {
+			imagesFolder = {
+				path: path.join(folderPath, fileBasename + '_files'),
+				affix: '_files'
+			}
+		} else if (fs.existsSync(path.join(folderPath, fileBasename + '.fld'))) {
+			imagesFolder = {
+				path: path.join(folderPath, fileBasename + '.fld'),
+				affix: '.fld'
+			}
+		}
+
+		if (fs.statSync(imagesFolder.path).isDirectory()) {
+			let imagesFolderFiles = fs.readdirSync(imagesFolder.path);
 			util.log("Image files", imagesFolderFiles);
 			// Loop and find all files with a png and jpg extension. Ignore any other kind of files
 			for (let j = 0; j < imagesFolderFiles.length; j++) {
@@ -38,9 +49,9 @@ const parseFolder = async ({
 				if (mimetype === '.png' || mimetype === '.jpg') {
 					imagesArray.push({
 						filename: imagesFolderFiles[j],
-						path: path.join(imagesFolderPath, imagesFolderFiles[j]),
+						path: path.join(imagesFolder.path, imagesFolderFiles[j]),
 						mimetype: mimetype === '.png' ? 'image/png' : 'image/jpeg',
-						baseFolder: fileBasename + '.fld',
+						baseFolder: fileBasename + imagesFolder.affix,
 					});
 				}
 			}
@@ -87,7 +98,7 @@ const createNarrative = async ({
 
 		// Generate Narrative uids and title
 		const narrativeUID = cuid();
-		const narrativeTitle = `${path.basename(htmlFilePath, '.html')}-${narrativeUID}`;
+		const narrativeTitle = `${path.basename(htmlFilePath, path.extname(htmlFilePath))}-${narrativeUID}`;
 
 		// Create a new narrative with the above generated uids and title
 		util.log("Creating Narrative for site", instanceUrl);
@@ -167,7 +178,7 @@ const createNarrative = async ({
 				}
 			})
 		});
-		
+
 	} catch (e) {
 		util.log(e);
 		throw e;

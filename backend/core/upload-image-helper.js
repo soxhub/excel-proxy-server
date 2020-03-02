@@ -1,6 +1,5 @@
 const request = require('request');
 const got = require('got');
-const FormData = require('form-data');
 const fs= require('fs');
 
 /**
@@ -13,16 +12,16 @@ const getS3SignedResponse = ({
 	token,
 }) => {
 	return new Promise(async (res, rej) => {
-		const form_data  = new FormData();
-		form_data.append('file_name', imageName);
-		form_data.append('model_name', 'narrative');
-		form_data.append('model_id', modelId);
-
 		const { body } = await got.post(clientUrl, {
 			headers: {
 				token,
+				'content-type': 'application/x-www-form-urlencoded',
 			},
-			body: form_data,
+			form: {
+				'file_name': imageName,
+				'model_name': 'narrative',
+				'model_id': modelId,
+			}
 		});
 
 		res(JSON.parse(body));
