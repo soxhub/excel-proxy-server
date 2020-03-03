@@ -8,22 +8,40 @@ const got = require("got");
 const multer = require("multer");
 const app = express();
 const path = require('path');
-const rimraf = require('rimraf');
 const PORT = process.env.PORT || 3001;
-const { queue, addNarratives } = require('./core/narrative-upload');
+const { addNarratives } = require('./core/narrative-upload');
+const s3 = require('./core/s3');
 const { UI } = require('bull-board');
 const shortid = require('shortid');
+const multerS3 = require('multer-s3');
+const config = require('config');
 
-const storage = multer.diskStorage({
-  destination: function(req, file, cb) {
-    cb(null, path.join(__dirname+'/uploads'));
-  },
-  filename: function(req, file, cb) {
-		cb(null, shortid.generate() + file.originalname);
-  }
-});
+let storage;
+let isProd = process.env.NODE_ENV === 'production';
 
-const upload = multer({ storage: storage }).any();
+if (isProd) {
+	storage = multerS3({
+		s3,
+		bucket: config.get('bucket'),
+		metadata: function (req, file, cb) {
+			cb(null, {fieldName: file.fieldname});
+		},
+		key: function (req, file, cb) {
+			cb(null, 'upload/' + shortid.generate() + file.originalname);
+		}
+	})
+} else {
+	storage = multer.diskStorage({
+		destination: function(req, file, cb) {
+			cb(null, path.join(__dirname+'/uploads'));
+		},
+		filename: function(req, file, cb) {
+			cb(null, shortid.generate() + file.originalname);
+		}
+	});
+}
+
+const upload = multer({ storage }).any();
 
 app.use(address());
 app.use('/', express.static(path.join(__dirname, 'public')));
@@ -36,12 +54,17 @@ app.use('/api/queues', UI);
 
 app.post("/api/upload", upload, async function(req, res) {
 	const { token, url:instanceUrl } = req.body;
-
 	try {
+		let zipPath;
+		if (isProd) {
+			zipPath = req.files[0].key;
+		} else {f
+			zipPath = req.files[0].path;
+		}
 		addNarratives({
 			token,
 			instanceUrl,
-			zipPath: req.files[0].path,
+			zipPath,
 		});
 
 		res.send({ 'message': 'file upload has been initiated' })
@@ -67,7 +90,7 @@ app.use("/proxy", async (req, res) => {
   }
 
   try {
-    
+
     let payload = await got(url, option);
     let statusOnPayload = payload.statusCode;
     return res.status(statusOnPayload).send(payload.body);
