@@ -66,14 +66,27 @@ app.use("/proxy", async (req, res) => {
     option.json = req.body;
   }
 
-
   try {
+    
     let payload = await got(url, option);
     let statusOnPayload = payload.statusCode;
     return res.status(statusOnPayload).send(payload.body);
+
   } catch (error) {
-    util.log(error.response.body);
-		return res.status(error.response.statusCode).send(error.response.body);
+
+    let errorMsg;
+    let errorStatus;
+
+    if(error.response === undefined){
+      util.log(error);
+      errorMsg = error.stack;
+      errorStatus = 404;
+    } else {
+      util.log(error.response.body);
+      errorMsg = error.response.body;
+      errorStatus = error.response.statusCode
+    }
+		return res.status(errorStatus).send(errorMsg);
   }
 });
 
