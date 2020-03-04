@@ -7,57 +7,30 @@
     font-family: 'Lato', sans-serif;
     width: 100%;
     font-size: 14px;
-    height: 100vh;
+    height: 100%;
     position: absolute;
     margin: 0 auto;
     text-align: center;
 }
 
-.login-container {
+.upload-container {
     position: relative;
     display: inline-block;
     overflow: hidden;
     padding-right: 0px;
-    width: 700px;
-    height: 500px;
+    width: 50%;
+    height: 100%;
     section {
         background-color: white;
     }
-    .info-msg {
-        margin: 5px 0 0 0;
-    }
     .panel {
-        width: 700px;
+        width: 100%;
+        height: 50%;
+        border-top: 5px solid #488ffa;
         .panel-heading {
             background: #fff;
-            padding-bottom: 20px;
         }
         overflow: hidden;
-        &.shrink {
-            height: 500px;
-            transition: height 500ms ease 300ms;
-            -webkit-transition: height 500ms ease 300ms;
-            -moz-transition: height 500ms ease 300ms;
-            -o-transition: height 500ms ease 300ms;
-        }
-        .step1 {
-            transition: left 300ms ease;
-            -webkit-transition: left 300ms ease;
-            -moz-transition: left 300ms ease;
-            -o-transition: left 300ms ease;
-            left: 0px;
-            width: 100%;
-            height: 235px;
-            background: #fff;
-            border-radius: 0 0 3px 3px;
-            &.slide-left {
-                left: -510px;
-            }
-            .btn-primary {
-                margin: 20px auto 5px;
-                display: block;
-            }
-        }
         .Upload {
             .btn-center {
                 display: block;
@@ -69,13 +42,6 @@
                 font-size: 15px;
             }
         }
-        img.logo {
-            display: inline-block;
-            position: relative;
-            width: 225px;
-            margin-top: 24px;
-            margin-right: 6px;
-        }
     }
 }
 
@@ -85,11 +51,12 @@
         height: 50px;
         box-shadow: none;
         font-size: 16px;
-        padding-right: 50;
+        padding-right: 50px;
         margin-top: 15px;
     }
     .form-group {
         margin-bottom: 10px;
+        
     }
 }
 .npb {
@@ -99,4 +66,43 @@
 .form-group {
     margin-left: 50px;
     margin-right: 50px;
+}
+
+h2 {
+
+    margin-left: 50px;
+    margin-bottom: 30px;
+    margin-top: 30px;
+}
+
+label {
+    float: left;
+    margin-top: 10px;
+    margin-bottom: 0px;
+    
+}
+
+.drop-container {
+    border: dashed lightgray;
+    margin-left: 50px;
+    margin-right: 50px;
+    margin-top: 30px;
+    height: 200px;
+    .dropzone{
+        height: 100%;
+        width: 100%;
+    }
+}
+
+.browse{
+    margin-top: 10%;
+}
+
+
+p {
+    margin: 0px;
+}
+
+h5 {
+    float: left;
 }
