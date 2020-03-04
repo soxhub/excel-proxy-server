@@ -79,7 +79,7 @@ app.use("/proxy", async (req, res) => {
 
     if(error.response === undefined){
       util.log(error);
-      errorMsg = error.stack;
+      errorMsg = {message: error.message};
       errorStatus = 404;
     } else {
       util.log(error.response.body);
