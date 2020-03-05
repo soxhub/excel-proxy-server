@@ -1,6 +1,7 @@
 import React from 'react'
 import UploadForm from './components/UploadForm'
 import './App.scss'
+import './styles/tailwind.css'
 
 function App() {
     return (

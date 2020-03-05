@@ -24,8 +24,8 @@
         background-color: white;
     }
     .panel {
-        width: 100%;
-        height: 50%;
+        max-width: 600px;
+        margin: 0 auto;
         border-top: 5px solid #488ffa;
         .panel-heading {
             background: #fff;
@@ -94,9 +94,6 @@ label {
     }
 }
 
-.browse{
-    margin-top: 10%;
-}
 
 
 p {
@@ -105,4 +102,12 @@ p {
 
 h5 {
     float: left;
+}
+
+h2 {
+    margin-left: 50px;
+}
+
+.btn-primary:disabled {
+    cursor: not-allowed;
 }
