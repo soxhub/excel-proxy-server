@@ -58,7 +58,7 @@ app.post("/api/upload", upload, async function(req, res) {
 		let zipPath;
 		if (isProd) {
 			zipPath = req.files[0].key;
-		} else {f
+		} else {
 			zipPath = req.files[0].path;
 		}
 		addNarratives({
