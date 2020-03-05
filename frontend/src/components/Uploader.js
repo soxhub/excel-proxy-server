@@ -122,6 +122,7 @@ function Upload() {
 			</div>
 			<div className="drop-container">
 				<div {...getRootProps({ className: 'dropzone' })}>
+          <div className="flex items-center justify-center flex-col w-full h-full">
 					<input
 						{...getInputProps()}
 						onChange={onChange}
@@ -142,7 +143,8 @@ function Upload() {
         {fileName}
 				{files.length === 1 && <ul>{files}</ul>}
 			</div>
-			<div className="form-group">
+      </div>
+			<div className="form-group" style={{marginBottom: 40}}>
 				<div className="row">
 					<div className="col-sm">
 						<button
