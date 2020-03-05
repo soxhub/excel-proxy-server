@@ -3,7 +3,7 @@ const xml2js = require('xml2js');
 const uploadImageHelper  = require("./upload-image-helper");
 const path = require('path');
 const fs = require('fs');
-const cuid = require('cuid');
+const uid = require('uid');
 const util = require('util');
 
 /**
@@ -97,8 +97,9 @@ const createNarrative = async ({
 		let htmlFileString = fs.readFileSync(htmlFilePath, 'utf8');
 
 		// Generate Narrative uids and title
-		const narrativeUID = cuid();
-		const narrativeTitle = `${path.basename(htmlFilePath, path.extname(htmlFilePath))}-${narrativeUID}`;
+		const generatedUid = uid(16);
+		const narrativeUID = `${path.basename(htmlFilePath, path.extname(htmlFilePath))}_${generatedUid}`;
+		const narrativeTitle = `${path.basename(htmlFilePath, path.extname(htmlFilePath))}_${generatedUid}`;
 
 		// Create a new narrative with the above generated uids and title
 		util.log("Creating Narrative for site", instanceUrl);

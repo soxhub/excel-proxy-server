@@ -5,7 +5,7 @@ import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 function Upload() {
-  const alert = useAlert();
+	const alert = useAlert();
 
   let [token, setToken] = useState(null);
   let [url, setUrl] = useState(null);
@@ -33,9 +33,7 @@ function Upload() {
         setUploading(false);
 
         // Redirect to Bull UI
-        if (process.env.NODE_ENV === 'development') {
-          window.location.href = 'http://localhost:3001/api/queues';
-        } else {
+        if (process.env.NODE_ENV === 'production') {
           window.location.href = '/api/queues';
         }
       })
@@ -43,17 +41,22 @@ function Upload() {
         alert.show('Error with upload, try again', { type: 'error' })
         alert.remove(startAlert);
       })
-  }
+	}
+
+	const isZip = (fileType) => {
+		// Mac and Windows zip fileType
+		return fileType === 'application/zip' || 'application/x-zip-compressed';
+	}
 
   const validated = () => {
-    let errorMsg = ''
-    
+    let errorMsg = '';
+
     if (token === '' || url === '') {
       // this case might not be needed anymore
       errorMsg = 'Please enter valid credentials and client app url.';
     } else if (url && !url.endsWith('.com')) {
       errorMsg = 'Please enter valid client app url.';
-    } else if (uploading && uploading.type !== 'application/zip') {
+    } else if (uploading && !isZip()) {
       errorMsg = 'Please upload a zip file.';
     } else if (!uploading) {
       //this case might not be needed anymore
