@@ -1,108 +1,105 @@
 .App {
-    text-align: center;
+  text-align: center;
 }
 
 .App-header {
-    background-color: #0a1232;
-    font-family: 'Lato', sans-serif;
-    width: 100%;
-    font-size: 14px;
-    height: 100%;
-    position: absolute;
-    margin: 0 auto;
-    text-align: center;
+  background-color: #0a1232;
+  font-family: 'Lato', sans-serif;
+  width: 100%;
+  font-size: 14px;
+  height: 100%;
+  position: absolute;
+  margin: 0 auto;
+  text-align: center;
 }
 
 .upload-container {
-    position: relative;
-    display: inline-block;
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  padding-right: 0px;
+  width: 50%;
+  height: 100%;
+  section {
+    background-color: white;
+  }
+  .panel {
+    width: 100%;
+    height: 50%;
+    border-top: 5px solid #488ffa;
+    .panel-heading {
+      background: #fff;
+    }
     overflow: hidden;
-    padding-right: 0px;
-    width: 50%;
-    height: 100%;
-    section {
-        background-color: white;
+    .Upload {
+      .btn-center {
+        display: block;
+        width: 150px;
+        margin: 0 auto;
+        margin-top: 20px;
+      }
+      .btn-big-txt {
+        font-size: 15px;
+      }
     }
-    .panel {
-        width: 100%;
-        height: 50%;
-        border-top: 5px solid #488ffa;
-        .panel-heading {
-            background: #fff;
-        }
-        overflow: hidden;
-        .Upload {
-            .btn-center {
-                display: block;
-                width: 150px;
-                margin: 0 auto;
-                margin-top: 20px;
-            }
-            .btn-big-txt {
-                font-size: 15px;
-            }
-        }
-    }
+  }
 }
 
 .form-theme-2 {
-    input[type='url'],
+  input[type='url'],
     input[type='password'] {
-        height: 50px;
-        box-shadow: none;
-        font-size: 16px;
-        padding-right: 50px;
-        margin-top: 15px;
-    }
-    .form-group {
-        margin-bottom: 10px;
-        
-    }
+    height: 50px;
+    box-shadow: none;
+    font-size: 16px;
+    padding-right: 50px;
+    margin-top: 15px;
+  }
+  .form-group {
+    margin-bottom: 10px;
+  }
 }
+
 .npb {
-    padding-bottom: 0;
+  padding-bottom: 0;
 }
 
 .form-group {
-    margin-left: 50px;
-    margin-right: 50px;
+  margin-left: 50px;
+  margin-right: 50px;
 }
 
 h2 {
-
-    margin-left: 50px;
-    margin-bottom: 30px;
-    margin-top: 30px;
+  margin-left: 50px;
+  margin-bottom: 30px;
+  margin-top: 30px;
 }
 
 label {
-    float: left;
-    margin-top: 10px;
-    margin-bottom: 0px;
-    
+  float: left;
+  margin-top: 10px;
+  margin-bottom: 0px;
 }
 
 .drop-container {
-    border: dashed lightgray;
-    margin-left: 50px;
-    margin-right: 50px;
-    margin-top: 30px;
-    height: 200px;
-    .dropzone{
-        height: 100%;
-        width: 100%;
-    }
+  border: dashed lightgray;
+  margin-left: 50px;
+  margin-right: 50px;
+  margin-top: 30px;
+  height: 200px;
+  .dropzone{
+    height: 100%;
+    width: 100%;
+  }
 }
 
 .browse{
-    margin-top: 10%;
+  margin-top: 10%;
 }
 
-
 p {
-    margin: 0px;
+  margin: 0px;
 }
 
 h5 {
-    float: left;
+  float: left;
 }
