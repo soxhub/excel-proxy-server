@@ -144,7 +144,7 @@ function Upload() {
 				{files.length === 1 && <ul>{files}</ul>}
 			</div>
       </div>
-			<div className="form-group" style={{marginBottom: 40}}>
+			<div className="form-group" style={{paddingBottom: 40}}>
 				<div className="row">
 					<div className="col-sm">
 						<button

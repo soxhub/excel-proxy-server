@@ -1,5 +1,20 @@
+html {
+    height: 100%;
+}
+
+body {
+    height: 100%;
+    background: #0a1232;
+}
+
 .App {
-    text-align: center;
+    height: 100%;
+    align-items: center;
+    padding-top: 100px;
+}
+
+#root {
+    height: 100%;
 }
 
 .App-header {
@@ -7,19 +22,15 @@
     font-family: 'Lato', sans-serif;
     width: 100%;
     font-size: 14px;
-    height: 100%;
-    position: absolute;
     margin: 0 auto;
     text-align: center;
+
 }
 
 .upload-container {
     position: relative;
     display: inline-block;
-    overflow: hidden;
     padding-right: 0px;
-    width: 50%;
-    height: 100%;
     section {
         background-color: white;
     }
@@ -30,7 +41,6 @@
         .panel-heading {
             background: #fff;
         }
-        overflow: hidden;
         .Upload {
             .btn-center {
                 display: block;
