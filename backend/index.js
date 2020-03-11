@@ -1,5 +1,5 @@
 const logger = require("./middlewares/logger");
-const address = require("./middlewares/address");
+const headerValidation = require("./middlewares/header-validation");
 const bodyParser = require("body-parser");
 const express = require("express");
 const cors = require("cors");
@@ -43,7 +43,7 @@ if (isProd) {
 
 const upload = multer({ storage }).any();
 
-app.use(address());
+app.use(headerValidation());
 app.use('/', express.static(path.join(__dirname, 'public')));
 
 app.use(logger());
