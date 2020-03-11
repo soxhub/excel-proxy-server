@@ -7,10 +7,11 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 function Upload() {
 	const alert = useAlert();
 
-  let [token, setToken] = useState(null);
-  let [url, setUrl] = useState(null);
-  let [uploading, setUploading] = useState(null);
+  let [ token, setToken ] = useState(null);
+  let [ url, setUrl ] = useState(null);
+  let [ uploading, setUploading ] = useState(null);
   let [ fileName, setFileName ] = useState(null);
+  let [ accessToken, setAccessToken ] = useState(null);
 
   const onFormSubmit = e => {
     e.preventDefault()
@@ -24,7 +25,9 @@ function Upload() {
     formData.append('token', token);
 
     const startAlert = alert.show('Narrative Being uploaded', { type: 'info', timeout: 3000000 });
-    axios.post('/api/upload', formData, startAlert)
+    axios.post('/api/upload', formData, {
+			headers: { 'access-token': accessToken }
+    }, startAlert)
       .then(() => {
         alert.show('Narrative successfully uploaded', {
           type: 'success',
@@ -51,9 +54,9 @@ function Upload() {
   const validated = () => {
     let errorMsg = '';
 
-    if (token === '' || url === '') {
+    if (token === '' || url === '' || accessToken === '') {
       // this case might not be needed anymore
-      errorMsg = 'Please enter valid credentials and client app url.';
+      errorMsg = 'Please enter valid credentials and client app url. Please reach out to get access token if you do not have one';
     } else if (url && !url.endsWith('.com')) {
       errorMsg = 'Please enter valid client app url.';
     } else if (uploading && !isZip()) {
@@ -103,6 +106,16 @@ function Upload() {
 
   return (
 		<form className="panel-body form-theme-2 npb">
+			<div className="form-group">
+				<label>ACCESS TOKEN</label>
+				<input
+					type="text"
+					name="accessToken"
+					className="form-control input-sm"
+					onChange={e => setAccessToken(e.target.value)}
+					required
+				/>
+			</div>
 			<div className="form-group">
 				<label>INSTANCE URL</label>
 				<input
