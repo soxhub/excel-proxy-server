@@ -1,5 +1,5 @@
 const logger = require("./middlewares/logger");
-const address = require("./middlewares/address");
+const accessValidation = require("./middlewares/access-validation");
 const bodyParser = require("body-parser");
 const express = require("express");
 const cors = require("cors");
@@ -43,8 +43,8 @@ if (isProd) {
 
 const upload = multer({ storage }).any();
 
-app.use(address());
 app.use('/', express.static(path.join(__dirname, 'public')));
+app.use(accessValidation());
 
 app.use(logger());
 app.use(cors());
@@ -111,6 +111,7 @@ app.use("/proxy", async (req, res) => {
     }
 		return res.status(errorStatus).send(errorMsg);
   }
+  
 });
 
 app.listen(PORT, () => console.log(`App listening on port ${PORT}!`));

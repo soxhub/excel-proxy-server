@@ -7,10 +7,11 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 function Upload() {
 	const alert = useAlert();
 
-  let [token, setToken] = useState(null);
-  let [url, setUrl] = useState(null);
-  let [uploading, setUploading] = useState(null);
+  let [ token, setToken ] = useState(null);
+  let [ url, setUrl ] = useState(null);
+  let [ uploading, setUploading ] = useState(null);
   let [ fileName, setFileName ] = useState(null);
+  let [ accessToken, setAccessToken ] = useState(null);
 
   const onFormSubmit = e => {
     e.preventDefault()
@@ -24,23 +25,23 @@ function Upload() {
     formData.append('token', token);
 
     const startAlert = alert.show('Narrative Being uploaded', { type: 'info', timeout: 3000000 });
-    axios.post('/api/upload', formData, startAlert)
-      .then(() => {
-        alert.show('Narrative successfully uploaded', {
-          type: 'success',
-        });
-        alert.remove(startAlert);
-        setUploading(false);
+    axios.post('/api/upload', formData, { params:{ accessToken: accessToken } }, startAlert)
+		.then(() => {
+			alert.show('Narrative successfully uploaded', {
+				type: 'success',
+			})
+			alert.remove(startAlert)
+			setUploading(false)
 
-        // Redirect to Bull UI
-        if (process.env.NODE_ENV === 'production') {
-          window.location.href = '/api/queues';
-        }
-      })
-      .catch(() => {
-        alert.show('Error with upload, try again', { type: 'error' })
-        alert.remove(startAlert);
-      })
+			// Redirect to Bull UI
+			if (process.env.NODE_ENV === 'production') {
+				window.location.href = `/api/queues?accessToken=${accessToken}`
+			}
+		})
+		.catch(() => {
+			alert.show('Error with upload, try again', { type: 'error' })
+			alert.remove(startAlert)
+		})
 	}
 
 	const isZip = (fileType) => {
@@ -51,9 +52,9 @@ function Upload() {
   const validated = () => {
     let errorMsg = '';
 
-    if (token === '' || url === '') {
+    if (token === '' || url === '' || accessToken === '') {
       // this case might not be needed anymore
-      errorMsg = 'Please enter valid credentials and client app url.';
+      errorMsg = 'Please enter valid credentials and client app url. Please reach out to get access token if you do not have one';
     } else if (url && !url.endsWith('.com')) {
       errorMsg = 'Please enter valid client app url.';
     } else if (uploading && !isZip()) {
@@ -104,6 +105,16 @@ function Upload() {
   return (
 		<form className="panel-body form-theme-2 npb">
 			<div className="form-group">
+				<label>PROXY TOKEN</label>
+				<input
+					type="text"
+					name="accessToken"
+					className="form-control input-sm"
+					onChange={e => setAccessToken(e.target.value)}
+					required
+				/>
+			</div>
+			<div className="form-group">
 				<label>INSTANCE URL</label>
 				<input
 					type="url"
@@ -114,7 +125,7 @@ function Upload() {
 				/>
 			</div>
 			<div className="form-group">
-				<label>TOKEN</label>
+				<label>AUDITBOARD AUTH TOKEN</label>
 				<input
 					type="password"
 					name="instanceToken"
