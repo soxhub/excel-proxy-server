@@ -44,13 +44,13 @@ if (isProd) {
 const upload = multer({ storage }).any();
 
 app.use('/', express.static(path.join(__dirname, 'public')));
+app.use('/api/queues', UI);
 app.use(accessValidation());
 
 app.use(logger());
 app.use(cors());
 app.options("*", cors());
 app.use(bodyParser.json());
-app.use('/api/queues', UI);
 
 app.post("/api/upload", upload, async function(req, res) {
 	const { token, url:instanceUrl } = req.body;
