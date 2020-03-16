@@ -25,25 +25,23 @@ function Upload() {
     formData.append('token', token);
 
     const startAlert = alert.show('Narrative Being uploaded', { type: 'info', timeout: 3000000 });
-    axios.post('/api/upload', formData, {
-			headers: { 'access-token': accessToken }
-    }, startAlert)
-      .then(() => {
-        alert.show('Narrative successfully uploaded', {
-          type: 'success',
-        });
-        alert.remove(startAlert);
-        setUploading(false);
+    axios.post('/api/upload', formData, { params:{ accessToken: accessToken } }, startAlert)
+		.then(() => {
+			alert.show('Narrative successfully uploaded', {
+				type: 'success',
+			})
+			alert.remove(startAlert)
+			setUploading(false)
 
-        // Redirect to Bull UI
-        if (process.env.NODE_ENV === 'production') {
-          window.location.href = '/api/queues';
-        }
-      })
-      .catch(() => {
-        alert.show('Error with upload, try again', { type: 'error' })
-        alert.remove(startAlert);
-      })
+			// Redirect to Bull UI
+			if (process.env.NODE_ENV === 'production') {
+				window.location.href = `/api/queues?accessToken=${accessToken}`
+			}
+		})
+		.catch(() => {
+			alert.show('Error with upload, try again', { type: 'error' })
+			alert.remove(startAlert)
+		})
 	}
 
 	const isZip = (fileType) => {
@@ -107,7 +105,7 @@ function Upload() {
   return (
 		<form className="panel-body form-theme-2 npb">
 			<div className="form-group">
-				<label>ACCESS TOKEN</label>
+				<label>PROXY TOKEN</label>
 				<input
 					type="text"
 					name="accessToken"
@@ -127,7 +125,7 @@ function Upload() {
 				/>
 			</div>
 			<div className="form-group">
-				<label>TOKEN</label>
+				<label>AUDITBOARD AUTH TOKEN</label>
 				<input
 					type="password"
 					name="instanceToken"

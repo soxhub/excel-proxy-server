@@ -10,7 +10,7 @@ function accessValidation() {
 
 		if (!isValid) {
 			return res.status(401).send({
-				message: 'Unauthorized'
+				message: 'Missing authentication'
 			})
 		} else {
 			next();
