@@ -4,7 +4,7 @@ const config = require('config');
 
 function headerValidation() {
   return (req, res, next) => {
-  	const token = req.headers["access-token"] || null;
+  	const token = req.query["access-token"] || null;
 
 		const isValid = !!token && token === config.get('accessToken');
 
