@@ -50,8 +50,9 @@ function Upload() {
 	}
 
 	const isValidUrl = (url) => {
+		// Remove trailing slashes
 		const cleanedUpUrl = url.trim().replace(/\/+$/, "");
-		return process.env.NODE_ENV === 'production' ? cleanedUpUrl && !cleanedUpUrl.endsWith('.com') : true;
+		return cleanedUpUrl && cleanedUpUrl.endsWith('.com');
 	}
 
   const validated = () => {
