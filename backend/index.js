@@ -55,12 +55,8 @@ app.use(bodyParser.json());
 app.post("/api/upload", upload, async function(req, res) {
 	const { token, url:instanceUrl } = req.body;
 	try {
-		let zipPath;
-		if (isProd) {
-			zipPath = req.files[0].key;
-		} else {
-			zipPath = req.files[0].path;
-		}
+		const zipPath = isProd ? req.files[0].key : req.files[0].path;
+
 		addNarratives({
 			token,
 			instanceUrl,
@@ -90,13 +86,10 @@ app.use("/proxy", async (req, res) => {
   }
 
   try {
-
     let payload = await got(url, option);
     let statusOnPayload = payload.statusCode;
     return res.status(statusOnPayload).send(payload.body);
-
   } catch (error) {
-
     let errorMsg;
     let errorStatus;
 
@@ -111,7 +104,7 @@ app.use("/proxy", async (req, res) => {
     }
 		return res.status(errorStatus).send(errorMsg);
   }
-  
+
 });
 
 app.listen(PORT, () => console.log(`App listening on port ${PORT}!`));

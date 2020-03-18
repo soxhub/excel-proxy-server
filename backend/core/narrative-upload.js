@@ -7,7 +7,7 @@ setQueues([ queue ]);
 const addNarratives = ({
 	instanceUrl,
 	token,
-	zipPath
+	zipPath,
 }) => {
 	// Remove trailing slashes and trim whitespace
 	const cleanedUpInstanceUrl = instanceUrl.trim().replace(/\/+$/, "");
@@ -15,7 +15,7 @@ const addNarratives = ({
 	queue.add({
 		instanceUrl: cleanedUpInstanceUrl,
 		token,
-		zipPath
+		zipPath,
 	});
 };
 
