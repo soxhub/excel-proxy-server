@@ -15,9 +15,9 @@ queue.process(MAX_JOBS_PER_WORKER, async (job, done) => {
 		const { directory } = await parseZip(zipPath);
 		await parseFolder({ token, instanceUrl, folderPath: directory, job });
 
-		// remove folder, and remove unzip content
 		const isProd = process.env.NODE_ENV === 'production';
 
+		// remove folder, and remove unzip content
 		if (isProd) {
 			await s3.deleteObject({
 				Bucket: config.get('bucket'),

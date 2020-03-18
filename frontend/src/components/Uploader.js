@@ -49,13 +49,18 @@ function Upload() {
 		return fileType === 'application/zip' || 'application/x-zip-compressed';
 	}
 
+	const isValidUrl = (url) => {
+		const cleanedUpUrl = url.trim().replace(/\/+$/, "");
+		return process.env.NODE_ENV === 'production' ? cleanedUpUrl && !cleanedUpUrl.endsWith('.com') : true;
+	}
+
   const validated = () => {
     let errorMsg = '';
 
     if (token === '' || url === '' || accessToken === '') {
       // this case might not be needed anymore
       errorMsg = 'Please enter valid credentials and client app url. Please reach out to get access token if you do not have one';
-    } else if (url && !url.endsWith('.com')) {
+    } else if (!isValidUrl(url)) {
       errorMsg = 'Please enter valid client app url.';
     } else if (uploading && !isZip()) {
       errorMsg = 'Please upload a zip file.';
@@ -89,7 +94,7 @@ function Upload() {
   const { getRootProps, getInputProps, open, acceptedFiles } = useDropzone({
     noClick: true,
     noKeyboard: true,
-    accept: 'application/zip',
+    accept: ['application/zip', 'application/x-zip-compressed'],
     onDrop: onDropAccepted
   });
   const files = acceptedFiles.map(file => (
@@ -97,8 +102,6 @@ function Upload() {
       {file.path} - {file.size} bytes
       </li>
   ));
-
-
 
   let disableSubmit = !url || !token || !uploading;
 

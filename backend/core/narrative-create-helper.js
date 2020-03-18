@@ -5,6 +5,65 @@ const path = require('path');
 const fs = require('fs');
 const uid = require('uid');
 const util = require('util');
+const glob = require('glob');
+
+/**
+ * Find HTML Files
+ */
+const _findHtmlFiles = async (folderPath) => {
+	return await new Promise((resolve, reject) => {
+		glob(`${folderPath}/**/*.{html,htm}`, function (er, matches) {
+			if (er) reject(er);
+			const files = matches.map((match) => ({
+				path: match,
+				basename: path.basename(match),
+				dirname: path.dirname(match),
+				filename: path.parse(path.basename(match)).name,
+			}));
+			resolve(files);
+		});
+	});
+} // _findHtmlFiles
+
+/**
+ * Find Image Files
+ */
+const _findImageFiles = async (file) => {
+	const { dirname, filename } = file;
+	let imagesArray = [];
+	let imagesFolderPath = '';
+
+	const isImagesFolderExist = ({ dirname, filename, ext}) => {
+		return fs.existsSync(path.join(dirname, filename + ext));
+	}
+
+	// The images are in a folder that lives at the same level as the HTML file. The folder contains  a `_files` affix or the `.fld` extension
+	if (isImagesFolderExist({dirname, filename, ext: '_files'})) {
+		imagesFolderPath = path.join(dirname, filename + '_files');
+	} else if (isImagesFolderExist({dirname, filename, ext: '.fld'})) {
+		imagesFolderPath = path.join(dirname, filename + '.fld');
+	}
+
+	if (imagesFolderPath && fs.statSync(imagesFolderPath).isDirectory()) {
+		imagesArray = await new Promise((resolve, reject) => {
+			glob(`${imagesFolderPath}/*.{jpg,png}`, function (er, matches) {
+				if (er) reject(er);
+				const files = matches.map((match) => {
+					const mimetype = path.extname(match);
+					return {
+						baseFolder: path.basename(path.dirname(match)),
+						filename: path.basename(match),
+						mimetype: mimetype === '.png' ? 'image/png' : 'image/jpeg',
+						path: match,
+					}
+				});
+				resolve(files);
+			});
+		});
+	}
+
+	return imagesArray;
+}; // _findImageFiles
 
 /**
  * Parse Folder
@@ -15,51 +74,17 @@ const parseFolder = async ({
 	token,
 	job,
 }) => {
-	// Get files inside unzipped folder
-	const files = fs.readdirSync(folderPath);
-	// Filter for html files. We need this array length to track progress
-	const htmlFiles = files.filter(file => path.extname(file) === '.htm' || path.extname(file) === '.html');
+	// Find array of HTML files
+	const htmlFiles = await _findHtmlFiles(folderPath);
 	util.log("Files are: ", htmlFiles);
 
 	// Create a narrative for each HTML file
 	for (let i = 0; i < htmlFiles.length; i++) {
-		let fileBasename = path.basename(htmlFiles[i], path.extname(htmlFiles[i]));
-		let imagesArray = [];
-		let imagesFolder = {};
-
-		// The images are in a folder that lives at the same level as the HTML file. The folder contains  a `_files` affix or the `.fld` extension
-		if (fs.existsSync(path.join(folderPath, fileBasename + '_files'))) {
-			imagesFolder = {
-				path: path.join(folderPath, fileBasename + '_files'),
-				affix: '_files'
-			}
-		} else if (fs.existsSync(path.join(folderPath, fileBasename + '.fld'))) {
-			imagesFolder = {
-				path: path.join(folderPath, fileBasename + '.fld'),
-				affix: '.fld'
-			}
-		}
-
-		if (fs.statSync(imagesFolder.path).isDirectory()) {
-			let imagesFolderFiles = fs.readdirSync(imagesFolder.path);
-			util.log("Image files", imagesFolderFiles);
-			// Loop and find all files with a png and jpg extension. Ignore any other kind of files
-			for (let j = 0; j < imagesFolderFiles.length; j++) {
-				let mimetype = path.extname(imagesFolderFiles[j]);
-				if (mimetype === '.png' || mimetype === '.jpg') {
-					imagesArray.push({
-						filename: imagesFolderFiles[j],
-						path: path.join(imagesFolder.path, imagesFolderFiles[j]),
-						mimetype: mimetype === '.png' ? 'image/png' : 'image/jpeg',
-						baseFolder: fileBasename + imagesFolder.affix,
-					});
-				}
-			}
-		}
+		let imagesFolder = await _findImageFiles(htmlFiles[i]);
 
 		await createNarrative({
-			htmlFilePath: path.join(folderPath, htmlFiles[i]),
-			imagesFolder: imagesArray,
+			htmlFilePath: htmlFiles[i].path,
+			imagesFolder,
 			instanceUrl,
 			token,
 		});
@@ -98,7 +123,9 @@ const createNarrative = async ({
 
 		// Generate Narrative uids and title
 		const generatedUid = uid(16);
-		const narrativeUID = `${path.basename(htmlFilePath, path.extname(htmlFilePath))}_${generatedUid}`;
+		// Ensure that UID is <= 30 letters. Generated UID length is 16 chars so the htmlFilePath portion of the name cannot be longer than 14 chars.
+		// Also ensure that the UID does not contain chars other than dashes, underscores, letters, numbers, and periods.
+		const narrativeUID = `${path.basename(htmlFilePath, path.extname(htmlFilePath)).substring(0, 13).replace(/[^-_\w\d.]+/gi, '_')}_${generatedUid}`;
 		const narrativeTitle = `${path.basename(htmlFilePath, path.extname(htmlFilePath))}_${generatedUid}`;
 
 		// Create a new narrative with the above generated uids and title
@@ -115,50 +142,52 @@ const createNarrative = async ({
 		// Get new narrative id
 		const newNarrativeId = JSON.parse(newNarrative.body).narratives[0].id;
 
-		util.log("Uploading Images");
-		// Loop images folder and add images to the narrative document HTML
-		for (let i = 0; i < imagesFolder.length; i++) {
-			const image = imagesFolder[i];
+		if (imagesFolder.length) {
+			util.log("Uploading Images");
+			// Loop images folder and add images to the narrative document HTML
+			for (let i = 0; i < imagesFolder.length; i++) {
+				const image = imagesFolder[i];
 
-			// Upload images to S3
-			const s3_response = await uploadImageHelper({
-				clientUrl: `${instanceUrl}/api/v1/files/s3_upload_signature`,
-				token,
-				imageName: image.filename,
-				imagePath: image.path,
-				modelId: newNarrativeId,
-			});
+				// Upload images to S3
+				const s3_response = await uploadImageHelper({
+					clientUrl: `${instanceUrl}/api/v1/files/s3_upload_signature`,
+					token,
+					imageName: image.filename,
+					imagePath: image.path,
+					modelId: newNarrativeId,
+				});
 
-			// Convert S3 XML response to JSON
-			const parser = new xml2js.Parser();
-			const s3_response_json = await parser.parseStringPromise(s3_response);
+				// Convert S3 XML response to JSON
+				const parser = new xml2js.Parser();
+				const s3_response_json = await parser.parseStringPromise(s3_response);
 
-			// Create a File for each S3 iamge
-			const file = await _client.post(`api/v1/files`, {
-				body: JSON.stringify({
-					"file": {
-						"fileable_id": newNarrativeId,
-						"fileable_type": "Narrative",
-						"name": image.filename,
-						"size": image.size,
-						"type": image.mimetype,
-						"key": s3_response_json.PostResponse.Key[0],
-						"url": s3_response_json.PostResponse.Location[0],
-						"storage_type": "s3",
-						"user_agent": "AuditBoard/11.2.0-dev",
-						"upload_user_id": user_id,
-						"creator_user_id": null,
-					}
-				}),
-			});
+				// Create a File for each S3 iamge
+				const file = await _client.post(`api/v1/files`, {
+					body: JSON.stringify({
+						"file": {
+							"fileable_id": newNarrativeId,
+							"fileable_type": "Narrative",
+							"name": image.filename,
+							"size": image.size,
+							"type": image.mimetype,
+							"key": s3_response_json.PostResponse.Key[0],
+							"url": s3_response_json.PostResponse.Location[0],
+							"storage_type": "s3",
+							"user_agent": "AuditBoard/11.2.0-dev",
+							"upload_user_id": user_id,
+							"creator_user_id": null,
+						}
+					}),
+				});
 
-			util.log("Replacing Images inside html content");
-			// Add a data-original-src attribute to the corresponding img tags in the HTML file with path set to the above S3 image file
-			htmlFileString = htmlFileString.toString().replace(
-				new RegExp(`"${image.baseFolder}/${image.filename}"`, "g"),
-				` data-original-src="${s3_response_json.PostResponse.Location[0]}" data-file-id="${JSON.parse(file.body).files[0].id}" data-type="s3"`
-			);
-		}
+				util.log("Replacing Images inside html content");
+				// Add a data-original-src attribute to the corresponding img tags in the HTML file with path set to the above S3 image file
+				htmlFileString = htmlFileString.toString().replace(
+					new RegExp(`"${image.baseFolder}/${image.filename}"`, "g"),
+					` data-original-src="${s3_response_json.PostResponse.Location[0]}" data-file-id="${JSON.parse(file.body).files[0].id}" data-type="s3"`
+				);
+			}
+		} // if imagesFolder.length
 
 		// Get the full narrative
 		util.log("Retrieve Document inside narrative");
