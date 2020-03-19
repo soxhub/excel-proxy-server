@@ -50,7 +50,7 @@ app.use(accessValidation());
 app.use(logger());
 app.use(cors());
 app.options("*", cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit:"50mb" }));
 
 app.post("/api/upload", upload, async function(req, res) {
 	const { token, url:instanceUrl } = req.body;
