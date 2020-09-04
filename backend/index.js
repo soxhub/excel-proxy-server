@@ -11,6 +11,7 @@ const path = require('path');
 const PORT = process.env.PORT || 3001;
 const { addNarratives } = require('./core/narrative-upload');
 const s3 = require('./core/s3');
+const db = require('./db');
 const { UI } = require('bull-board');
 const shortid = require('shortid');
 const multerS3 = require('multer-s3');
@@ -24,7 +25,7 @@ if (isProd) {
 		s3,
 		bucket: config.get('bucket'),
 		metadata: function (req, file, cb) {
-			cb(null, {fieldName: file.fieldname});
+			cb(null, { fieldName: file.fieldname });
 		},
 		key: function (req, file, cb) {
 			cb(null, 'upload/' + shortid.generate() + file.originalname);
@@ -32,10 +33,10 @@ if (isProd) {
 	})
 } else {
 	storage = multer.diskStorage({
-		destination: function(req, file, cb) {
-			cb(null, path.join(__dirname+'/uploads'));
+		destination: function (req, file, cb) {
+			cb(null, path.join(__dirname + '/uploads'));
 		},
-		filename: function(req, file, cb) {
+		filename: function (req, file, cb) {
 			cb(null, shortid.generate() + file.originalname);
 		}
 	});
@@ -50,10 +51,10 @@ app.use(accessValidation());
 app.use(logger());
 app.use(cors());
 app.options("*", cors());
-app.use(bodyParser.json({ limit:"50mb" }));
+app.use(bodyParser.json({ limit: "50mb" }));
 
-app.post("/api/upload", upload, async function(req, res) {
-	const { token, url:instanceUrl } = req.body;
+app.post("/api/upload", upload, async function (req, res) {
+	const { token, url: instanceUrl } = req.body;
 	try {
 		const zipPath = isProd ? req.files[0].key : req.files[0].path;
 
@@ -64,47 +65,60 @@ app.post("/api/upload", upload, async function(req, res) {
 		});
 
 		res.send({ 'message': 'file upload has been initiated' })
-	} catch(err) {
+	} catch (err) {
 		console.log('error: ', err);
 	}
 });
 
 app.use("/proxy", async (req, res) => {
-  let url = req.query.targetUrl;
-  let token = req.query.token;
+	const { targetUrl, token } = req.query;
+	const { method } = req;
 
-  let option = {
-    method: req.method,
-    headers: {
-      token: token
-    },
-    responseType: "text"
-  };
+	// gotOptions will be passed to "got" to make the request to the AB API
+	const gotOptions = {
+		method,
+		headers: { token },
+		responseType: "text"
+	};
 
-  if (req.method === "PUT" || req.method === "POST") {
-    option.json = req.body;
-  }
+	if (method === "PUT" || method === "POST") {
+		gotOptions.json = req.body;
+	}
 
-  try {
-    let payload = await got(url, option);
-    let statusOnPayload = payload.statusCode;
-    return res.status(statusOnPayload).send(payload.body);
-  } catch (error) {
-    let errorMsg;
-    let errorStatus;
+	// statusCode and responseBody will be returned by this server
+	let statusCode;
+	let responseBody;
 
-    if(error.response === undefined){
-      util.log(error);
-      errorMsg = {message: error.message};
-      errorStatus = 404;
-    } else {
-      util.log(error.response.body);
-      errorMsg = error.response.body;
-      errorStatus = error.response.statusCode
-    }
-		return res.status(errorStatus).send(errorMsg);
-  }
+	try {
+		const payload = await got(targetUrl, gotOptions);
+		statusCode = payload.statusCode;
+		responseBody = payload.body;
+	} catch (error) {
+		if (error.response === undefined) {
+			util.log(error);
+			statusCode = 404;
+			responseBody = { message: error.message };
+		} else {
+			util.log(error.response.body);
+			statusCode = error.response.statusCode;
+			responseBody = error.response.body;
+		}
+	} finally {
+		// save log entry to the database for the current request
+		try {
+			await db.saveLogEntry(method, targetUrl, token, statusCode);
+		} catch (error) {
+			util.log(error);
+		}
 
+		// return a response to the client 
+		return res.status(statusCode).send(responseBody);
+	}
 });
 
-app.listen(PORT, () => console.log(`App listening on port ${PORT}!`));
+db.initializeDatabase()
+	.then(() => {
+		app.listen(PORT, () => {
+			util.log(`App listening on port ${PORT}!`);
+		});
+	});
