@@ -19,6 +19,7 @@ module.exports = Object.freeze({
         if (!tableExists) {
             await knex.schema.createTable(LOG_TABLE_NAME, (table) => {
                 table.increments("id");
+                table.dateTime("date_time", { useTz: false });
                 table.string("user_name");
                 table.string("http_method");
                 table.string("base_url");
@@ -43,6 +44,7 @@ module.exports = Object.freeze({
         
         // save the log entry
         return knex(LOG_TABLE_NAME).insert({
+            date_time: new Date(), // save the current date/time in UTC timezone
             user_name,
             http_method,
             base_url,
