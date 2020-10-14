@@ -18,7 +18,7 @@ const multerS3 = require('multer-s3');
 const config = require('config');
 
 let storage;
-let isProd = process.env.NODE_ENV === 'production';
+const isProd = process.env.NODE_ENV === 'production';
 
 if (isProd) {
 	storage = multerS3({
@@ -46,7 +46,10 @@ const upload = multer({ storage }).any();
 
 app.use('/', express.static(path.join(__dirname, 'public')));
 app.use('/api/queues', UI);
-app.use(accessValidation());
+
+if (isProd) {
+	app.use(accessValidation());
+}
 
 app.use(logger());
 app.use(cors());
@@ -105,10 +108,12 @@ app.use("/proxy", async (req, res) => {
 		}
 	} finally {
 		// save log entry to the database for the current request
-		try {
-			await db.saveLogEntry(method, targetUrl, token, statusCode);
-		} catch (error) {
-			util.log(error);
+		if (isProd) {
+			try {
+				await db.saveLogEntry(method, targetUrl, token, statusCode);
+			} catch (error) {
+				util.log(error);
+			}
 		}
 
 		// return a response to the client 
@@ -116,9 +121,11 @@ app.use("/proxy", async (req, res) => {
 	}
 });
 
-db.initializeDatabase()
-	.then(() => {
-		app.listen(PORT, () => {
-			util.log(`App listening on port ${PORT}!`);
-		});
-	});
+async function startApp(isProd) {
+	if (isProd) {
+		await db.initializeDatabase();
+	}
+	app.listen(PORT, () => util.log(`App listening on port ${PORT}!`));
+}
+
+startApp(isProd);
