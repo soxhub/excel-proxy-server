@@ -193,7 +193,7 @@ const createNarrative = async ({
 		util.log("Retrieve Document inside narrative");
 		const getNarrative = await _client.get(`api/v1/narratives/${newNarrativeId}`, {
 			headers: { token },
-			searchParams: new URLSearchParams([['include', 'full_narrative']]),
+			searchParams: new URLSearchParams([['include', 'narrative:full']]),
 		});
 
 		// Get the narrative document
