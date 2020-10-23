@@ -8,16 +8,18 @@ const knex = require("knex")({
     }
 });
 
-const LOG_TABLE_NAME = "logs";
+const ADDIN_LOG_TABLE_NAME = "logs";
+const NARRATIVE_LOG_TABLE_NAME = "narrative_logs";
 
 module.exports = Object.freeze({
     async initializeDatabase() {
         util.log("Initializing database...");
 
-        const tableExists = await knex.schema.hasTable(LOG_TABLE_NAME);
+        const addinTableExists = await knex.schema.hasTable(ADDIN_LOG_TABLE_NAME);
+        const narrativeTableExists = await knex.schema.hasTable(NARRATIVE_LOG_TABLE_NAME);
 
-        if (!tableExists) {
-            await knex.schema.createTable(LOG_TABLE_NAME, (table) => {
+        if (!addinTableExists) {
+            await knex.schema.createTable(ADDIN_LOG_TABLE_NAME, (table) => {
                 table.increments("id");
                 table.dateTime("date_time", { useTz: false });
                 table.string("user_name");
@@ -28,10 +30,19 @@ module.exports = Object.freeze({
             });
         }
 
+        if (!narrativeTableExists) {
+            await knex.schema.createTable(NARRATIVE_LOG_TABLE_NAME, (table) => {
+                table.increments("id");
+                table.dateTime("date_time", { useTz: false });
+                table.string("user_name");
+                table.string("instance_url");
+            });
+        }
+
         util.log("Database initialization complete!");
     },
 
-    async saveLogEntry(http_method, target_url, token, status_code) {
+    async saveAddinLogEntry(http_method, target_url, token, status_code) {
         // do some prep work before saving the log entry.
         // first, extract the base_url and api_endpoint from target_url
         const url_obj = new URL(target_url);
@@ -43,13 +54,23 @@ module.exports = Object.freeze({
         const user_name = await this._getUserName(base_url, token);
         
         // save the log entry
-        return knex(LOG_TABLE_NAME).insert({
+        return knex(ADDIN_LOG_TABLE_NAME).insert({
             date_time: new Date(), // save the current date/time in UTC timezone
             user_name,
             http_method,
             base_url,
             api_endpoint,
             status_code,
+        });
+    },
+
+    async saveNarrativeLogEntry(instance_url, token) {
+        const user_name = await this._getUserName(instance_url, token);
+
+        return knex(NARRATIVE_LOG_TABLE_NAME).insert({
+            date_time: new Date(), // save the current date/time in UTC timezone
+            user_name,
+            instance_url,
         });
     },
 

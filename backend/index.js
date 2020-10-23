@@ -58,6 +58,15 @@ app.use(bodyParser.json({ limit: "50mb" }));
 
 app.post("/api/upload", upload, async function (req, res) {
 	const { token, url: instanceUrl } = req.body;
+
+	if (isProd) {
+		try {
+			await db.saveNarrativeLogEntry(instanceUrl, token);
+		} catch (error) {
+			util.log(error);
+		}
+	}
+
 	try {
 		const zipPath = isProd ? req.files[0].key : req.files[0].path;
 
@@ -110,7 +119,7 @@ app.use("/proxy", async (req, res) => {
 		// save log entry to the database for the current request
 		if (isProd) {
 			try {
-				await db.saveLogEntry(method, targetUrl, token, statusCode);
+				await db.saveAddinLogEntry(method, targetUrl, token, statusCode);
 			} catch (error) {
 				util.log(error);
 			}
