@@ -65,7 +65,10 @@ module.exports = Object.freeze({
     },
 
     async saveNarrativeLogEntry(instance_url, token) {
-        const user_name = await this._getUserName(instance_url, token);
+        const url_obj = new URL(instance_url);
+        const base_url = url_obj.origin;
+
+        const user_name = await this._getUserName(base_url, token);
 
         return knex(NARRATIVE_LOG_TABLE_NAME).insert({
             date_time: new Date(), // save the current date/time in UTC timezone
