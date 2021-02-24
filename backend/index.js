@@ -19,6 +19,7 @@ const config = require('config');
 
 let storage;
 const isProd = process.env.NODE_ENV === 'production';
+const loggingEnabled = (process.env.LOGGING_ENABLED) && (process.env.LOGGING_ENABLED.toLowerCase() === 'true');
 
 if (isProd) {
 	storage = multerS3({
@@ -59,7 +60,7 @@ app.use(bodyParser.json({ limit: "50mb" }));
 app.post("/api/upload", upload, async function (req, res) {
 	const { token, url: instanceUrl } = req.body;
 
-	if (isProd) {
+	if (loggingEnabled) {
 		try {
 			await db.saveNarrativeLogEntry(instanceUrl, token);
 		} catch (error) {
@@ -117,7 +118,7 @@ app.use("/proxy", async (req, res) => {
 		}
 	} finally {
 		// save log entry to the database for the current request
-		if (isProd) {
+		if (loggingEnabled) {
 			try {
 				await db.saveAddinLogEntry(method, targetUrl, token, statusCode);
 			} catch (error) {
@@ -130,11 +131,11 @@ app.use("/proxy", async (req, res) => {
 	}
 });
 
-async function startApp(isProd) {
-	if (isProd) {
+async function startApp(loggingEnabled) {
+	if (loggingEnabled) {
 		await db.initializeDatabase();
 	}
 	app.listen(PORT, () => util.log(`App listening on port ${PORT}!`));
 }
 
-startApp(isProd);
+startApp(loggingEnabled);
